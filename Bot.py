@@ -1,11 +1,10 @@
-from json import loads
+import json
 import re
-from time import sleep
 from os import system
-from win10toast import ToastNotifier
+from time import sleep
 from openpyxl import Workbook
 from requests import get
-from sys import exit
+from win10toast import ToastNotifier
 
 toaster = ToastNotifier()
 
@@ -15,6 +14,7 @@ Produtos = []
 Quantidade = []
 CustoBenef = []
 Preco = []
+Tipo = []
 # Pegar os IDs - Retorna a lista IDs:
 
 
@@ -29,7 +29,7 @@ def getlistaids():
             pagina = get(url).text
             for x in range(0, 12):
                 IDs.append(
-                    int(loads(pagina)["content"]["products"][x]["id"]))
+                    int(json.loads(pagina)["content"]["products"][x]["id"]))
     except IndexError:
         None
 
@@ -42,7 +42,7 @@ def getlistaids():
             pagina = get(url).text
             for x in range(0, 12):
                 IDs.append(
-                    int(loads(pagina)["content"]["products"][x]["id"]))
+                    int(json.loads(pagina)["content"]["products"][x]["id"]))
     except IndexError:
         None
     print("{} IDs importados com sucesso!".format(len(IDs)))
@@ -53,27 +53,29 @@ def getdetails(listaids):
     global Produtos
     global Preco
     global Quantidade
-    p = 0
     i = 0
     total = len(listaids)
+
     for ids in listaids:
-        url = r"https://api.gpa.digital/pa/products/" + \
-            str(ids) + r"?storeId=501&isClienteMais=false"
-        Produtos.append(str(loads(get(url).text)
-                            ["content"]["name"]).strip())
-        q = loads(get(url).text)["content"]["totalQuantity"]
-        if q == 0:
-            Quantidade.append(1)
+        pagina = get("https://api.gpa.digital/pa/products/" +
+                    str(ids) + "?storeId=501&isClienteMais=false").text
+        Produtos.append(str(json.loads(pagina)["content"]["name"]).strip())
+        if json.loads(pagina)["content"]["stock"] == True:
+            Preco.append(
+                round(float(json.loads(pagina)["content"]["currentPrice"]), 2))
+            q = int(json.loads(pagina)["content"]["totalQuantity"])
+            if q == 0:
+                q = 1
+                Quantidade.append(q)
+            else:
+                Quantidade.append(q)
         else:
-            Quantidade.append(int(loads(get(url).text)[
-                              "content"]["totalQuantity"]))
-        p = round(float(loads(get(url).text)
-                        ["content"]["currentPrice"]), 2)
-        if p == 0:
-            p = "Indisponível"
-        Preco.append(p)
+            Preco.append("Indisponível")
+            Quantidade.append("Indisponível")
         i = i + 1
         print("Pegando informações {} de {}".format(i, total))
+        Tipo.append(
+            str(json.loads(pagina)["content"]["shelfList"][0]["name"]).strip())
     return
 
 
@@ -93,20 +95,20 @@ def getVolume(Produto):
 def joganaplan():
     wb = Workbook()
     ws = wb.active
-    ws.append(["Link", "Produtos", "Quantidade",
-               "Volume", "Preco", "Custo Benefício", "Preço Unidade"])
+    ws.append(["Link", "Tipo", "Produtos", "Quantidade",
+            "Volume", "Preco", "Custo Benefício", "Preço Unidade"])
     cont = 1
     total = len(IDs)
     for i in range(0, len(IDs)):
         try:
-            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), (str(Produtos[i]).strip()), Quantidade[i], getVolume(
-                Produtos[i]), Preco[i], round(float((Preco[i] / (getVolume(Produtos[i]) * Quantidade[i]))), 6),(Preco[i]/Quantidade[i])])
+            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
+                Produtos[i]), Preco[i], round(float((Preco[i] / (getVolume(Produtos[i]) * Quantidade[i]))), 6), round((Preco[i] / Quantidade[i]), 2)])
         except:
-            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), (str(Produtos[i]).strip()), Quantidade[i], getVolume(
-                Produtos[i]), Preco[i],"Indisponível", "Indisponível"])
+            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
+                Produtos[i]), Preco[i], "Indisponível", "Indisponível"])
         print("Jogando na planilha item {} de {}".format(cont, total))
         cont += 1
-    ws.auto_filter.ref = "A1:G1000"
+    ws.auto_filter.ref = "A1:H1000"
     for col in ws.columns:
         max_length = 0
         column = col[0].column  # Get the column name
@@ -124,9 +126,11 @@ def joganaplan():
 
 
 try:
+    system("mode con cols=60 lines=13")
+    print("")
     print("Olá, eu sou o Bot do Grau Baratinho! :)")
     print("\n")
-    print("Fui desenvolvido pelo Magui Pica e estou na versão 0.3!")
+    print("Fui desenvolvido pelo Magui Pica e estou na versão 0.5!")
     print("\n")
     print("Borá Chapar?")
     print("\n")
@@ -147,7 +151,6 @@ try:
     except:
         print("Notificação falhou :(")
     print("\n")
-    input("Press Enter to exit, Bitch!")
-    exit()
+    x = input("Press Enter to exit, Bitch!")
 except:
     print("Deu pau :( ")
