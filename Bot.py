@@ -57,25 +57,33 @@ def getdetails(listaids):
     total = len(listaids)
 
     for ids in listaids:
-        pagina = get("https://api.gpa.digital/pa/products/" +
-                    str(ids) + "?storeId=501&isClienteMais=false").text
-        Produtos.append(str(json.loads(pagina)["content"]["name"]).strip())
-        if json.loads(pagina)["content"]["stock"] == True:
-            Preco.append(
-                round(float(json.loads(pagina)["content"]["currentPrice"]), 2))
-            q = int(json.loads(pagina)["content"]["totalQuantity"])
-            if q == 0:
-                q = 1
-                Quantidade.append(q)
+        try:
+            pagina = get("https://api.gpa.digital/pa/products/" +
+                         str(ids) + "?storeId=81&isClienteMais=false", verify=True, timeout=3).text
+            Produtos.append(str(json.loads(pagina)["content"]["name"]).strip())
+            if json.loads(pagina)["content"]["stock"] == True:
+                Preco.append(
+                    round(float(json.loads(pagina)["content"]["currentPrice"]), 2))
+                q = int(json.loads(pagina)["content"]["totalQuantity"])
+                if q == 0:
+                    q = 1
+                    Quantidade.append(q)
+                else:
+                    Quantidade.append(q)
             else:
-                Quantidade.append(q)
-        else:
-            Preco.append("Indisponível")
-            Quantidade.append("Indisponível")
-        i = i + 1
-        print("Pegando informações {} de {}".format(i, total))
-        Tipo.append(
-            str(json.loads(pagina)["content"]["shelfList"][0]["name"]).strip())
+                Preco.append("Indisponível")
+                Quantidade.append("Indisponível")
+            i = i + 1
+            print("Pegando informações {} de {} id {}".format(i, total, ids))
+            Tipo.append(
+                str(json.loads(pagina)["content"]["shelfList"][0]["name"]).strip())
+        except:
+            Produtos.append("Sem resposta")
+            Preco.append("Sem resposta")
+            Quantidade.append("Sem resposta")
+    print("")
+    print(str((total-i)) + " Cervejas Indisponíveis")
+
     return
 
 
@@ -93,44 +101,43 @@ def getVolume(Produto):
 
 
 def joganaplan():
-    wb = Workbook()
-    ws = wb.active
-    ws.append(["Link", "Tipo", "Produtos", "Quantidade",
-            "Volume", "Preco", "Custo Benefício", "Preço Unidade"])
-    cont = 1
-    total = len(IDs)
-    for i in range(0, len(IDs)):
-        try:
-            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
-                Produtos[i]), Preco[i], round(float((Preco[i] / (getVolume(Produtos[i]) * Quantidade[i]))), 6), round((Preco[i] / Quantidade[i]), 2)])
-        except:
-            ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
-                Produtos[i]), Preco[i], "Indisponível", "Indisponível"])
-        print("Jogando na planilha item {} de {}".format(cont, total))
-        cont += 1
-    ws.auto_filter.ref = "A1:H1000"
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column  # Get the column name
-        for cell in col:
-            try:  # Necessary to avoid error on empty cells
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+    try:
+        wb = Workbook()
+        ws = wb.active
+        ws.append(["Link", "Tipo", "Produtos", "Quantidade",
+                   "Volume", "Preco", "Custo Benefício", "Preço Unidade"])
+        total = len(IDs)
+        for i in range(1, len(IDs)):
+            try:
+                ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
+                    Produtos[i]), Preco[i], round(float((Preco[i] / (getVolume(Produtos[i]) * Quantidade[i]))), 6), round((Preco[i] / Quantidade[i]), 2)])
             except:
-                pass
-        adjusted_width = (max_length + 2) * 1.2
-        ws.column_dimensions[column].width = adjusted_width
+                ws.append([(("https://www.paodeacucar.com/produto/" + str(IDs[i]))), Tipo[i], (str(Produtos[i]).strip()), Quantidade[i], getVolume(
+                    Produtos[i]), Preco[i], "Indisponível", "Indisponível"])
+        ws.auto_filter.ref = "A1:H1000"
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column  # Get the column name
+            for cell in col:
+                try:  # Necessary to avoid error on empty cells
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+            adjusted_width = (max_length + 2) * 1.2
+            ws.column_dimensions[column].width = adjusted_width
+    except:
+        None
     wb.save("Brejinhas.xlsx")
     print("Salvo em Excel!")
     return
-
 
 try:
     system("mode con cols=60 lines=13")
     print("")
     print("Olá, eu sou o Bot do Grau Baratinho! :)")
     print("\n")
-    print("Fui desenvolvido pelo Magui Pica e estou na versão 0.5!")
+    print("Fui desenvolvido pelo Maguila Pica e estou na versão 0.6!")
     print("\n")
     print("Borá Chapar?")
     print("\n")
@@ -147,10 +154,11 @@ try:
     print("Agora é só curtir :)")
     try:
         toaster.show_toast("Finalizado com sucesso Parça!",
-                        "{} Brejinhas foram adicionadas na sua planilha de Excel :)".format(len(IDs)))
+                           "{} Brejinhas foram adicionadas na sua planilha de Excel :)".format(len(IDs)))
     except:
         print("Notificação falhou :(")
     print("\n")
     x = input("Press Enter to exit, Bitch!")
 except:
     print("Deu pau :( ")
+
