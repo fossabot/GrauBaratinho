@@ -4,7 +4,7 @@
 
 class PDA(object):
 
-    #Product Variables
+    # Product Variables
     IDs = []
     types = []
     products = []
@@ -13,16 +13,16 @@ class PDA(object):
     cost_benefit_factors = []
     prices = []
 
-    #Class Variables
+    # Class Variables
     store_id = "501"
     option = "0"
 
     def __init__(self):
-        #It doesn't initialize anything LOL
+        # It doesn't initialize anything LOL
         pass
 
     def set_store(self):
-        #Will set the Class Variable "store_id" to your desired store
+        # Will set the Class Variable "store_id" to your desired store
         import os
         import time
 
@@ -87,10 +87,10 @@ class PDA(object):
             "4": r"https://api.gpa.digital/pa/products/list/secoes/C4215/vodka-cachacas-e-saques?storeId=1161&qt=12&s=&ftr=facetSubShelf_ss%3A4215_Vodka%2C%20Cacha%C3%A7as%20e%20Saqu%C3%AAs&p=1&rm=&gt=list&isClienteMais=true",
         }
 
-        x = urls[option].replace("storeId=1161", "storeId="+self.store_id)
+        x = urls[option].replace("storeId=1161", "storeId=" + self.store_id)
         new_urls = []
         for i in range(1, 501):
-            new_urls.append(x.replace("&p=1", "&p="+str(i)))
+            new_urls.append(x.replace("&p=1", "&p=" + str(i)))
         for i in new_urls:
             HTML_page = requests.get(i).text
             number_elements = json.loads(
@@ -104,8 +104,8 @@ class PDA(object):
                     product_type = json.loads(
                         HTML_page)["content"]["products"][x]["shelfList"][0]["name"]
                     if product_type == "Bebidas":
-                        self.types.append(json.loads(HTML_page)[
-                                          "content"]["products"][x]["shelfList"][1]["name"])
+                        self.types.append(
+                            json.loads(HTML_page)["content"]["products"][x]["shelfList"][1]["name"])
                     else:
                         self.types.append(product_type)
                     self.products.append(
@@ -116,8 +116,10 @@ class PDA(object):
                         self.quantities.append(1)
                     else:
                         self.quantities.append(quantity)
-                    self.prices.append(round(json.loads(HTML_page)[
-                                       "content"]["products"][x]["currentPrice"], 2))
+                    self.prices.append(
+                        round(
+                            json.loads(HTML_page)["content"]["products"][x]["currentPrice"],
+                            2))
 
     def get_volume(self, Product):
         import re
@@ -135,7 +137,7 @@ class PDA(object):
         return volume
 
     def export_xlsx(self):
-        #import Workbook object from Openpyxl
+        # import Workbook object from Openpyxl
         from openpyxl import Workbook
 
         wb = Workbook()
@@ -146,17 +148,21 @@ class PDA(object):
                    "Quantities", "Volumes", "prices"])
 
         for i in range(0, len(self.IDs)):
-            ws.append([self.IDs[i], self.types[i], self.products[i],
-                       self.quantities[i], self.get_volume(self.products[i]), self.prices[i]])
-        wb.save(self.spreed_sheet_name+".xlsx")
+            ws.append([self.IDs[i],
+                       self.types[i],
+                       self.products[i],
+                       self.quantities[i],
+                       self.get_volume(self.products[i]),
+                       self.prices[i]])
+        wb.save(self.spreed_sheet_name + ".xlsx")
 
     def make_cost_benefit(self):
-        #makes an array of quantity * volume / price
+        # makes an array of quantity * volume / price
         for i in range(0, len(self.IDs)):
             try:
                 self.cost_benefit_factors.append(
-                    self.quantities[i]*self.volumes[i]/self.prices[i])
-            except:
+                    self.quantities[i] * self.volumes[i] / self.prices[i])
+            except BaseException:
                 self.cost_benefit_factors("Unavailable")
 
     def run(self):
@@ -191,17 +197,17 @@ class PDA(object):
             self.get_infos("2")
             self.get_infos("3")
             self.get_infos("4")
-            #It actually doesn't work because it append out of order :(
+            # It actually doesn't work because it append out of order :(
 
             #t1 = threading.Thread(target=self.get_infos, args=("1"))
             #t2 = threading.Thread(target=self.get_infos, args=("2"))
             #t3 = threading.Thread(target=self.get_infos, args=("3"))
             #t4 = threading.Thread(target=self.get_infos, args=("4"))
-            #t1.start()
-            #t2.start()
-            #t3.start()
-            #t4.start()
-            #t1.join()
-            #t2.join()
-            #t3.join()
-            #t4.join()
+            # t1.start()
+            # t2.start()
+            # t3.start()
+            # t4.start()
+            # t1.join()
+            # t2.join()
+            # t3.join()
+            # t4.join()
