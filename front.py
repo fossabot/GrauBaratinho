@@ -23,7 +23,7 @@ init(convert=True)
 
 os.system("mode con cols=100 lines=35")
 os.system(
-    "title "+"Grau Baratinho                                                                                                                             By https://github.com/maguila93")
+    "title " + "Grau Baratinho                                                                                                                             By https://github.com/maguila93")
 
 print(Fore.GREEN)
 
@@ -42,10 +42,10 @@ toaster.show_toast("{} Products exported to Excel".format(len(a.IDs)),
                    duration=3)
 
 
-os.remove(os.path.dirname(os.path.abspath(__file__))+r"\Industry-Poison.ico")
+os.remove(os.path.dirname(os.path.abspath(__file__)) + r"\Industry-Poison.ico")
 
-os.system(a.spreed_sheet_name+r".xlsx")
+os.system(a.spreed_sheet_name + r".xlsx")
 
-os.system(os.path.dirname(os.path.abspath(__file__))+a.spreed_sheet_name)
+os.system(os.path.dirname(os.path.abspath(__file__)) + a.spreed_sheet_name)
 
 quit()
